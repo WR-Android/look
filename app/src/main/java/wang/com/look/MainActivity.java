@@ -1,6 +1,7 @@
 package wang.com.look;
 
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -21,11 +22,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (android.os.Build.VERSION.SDK_INT > 9) {
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+            StrictMode.setThreadPolicy(policy);
+        }
+
         et_path = (EditText) findViewById(R.id.et_path);
         tv_result = (TextView) findViewById(R.id.tv_result);
     }
 
     public void click(View v){
+
         try {
             //获取源码地址
             String path = et_path.getText().toString().trim();

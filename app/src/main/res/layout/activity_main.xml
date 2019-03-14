@@ -20,10 +20,15 @@
         android:text="查看"
         />
 
-    <TextView
-        android:id="@+id/tv_result"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tv_result"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+    </ScrollView>
 
 </LinearLayout>
