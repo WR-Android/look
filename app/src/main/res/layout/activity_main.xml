@@ -10,25 +10,45 @@
         android:id="@+id/et_path"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="请输入查看网址"
+        android:hint="请输入查看网址或图片地址"
         />
 
     <Button
         android:onClick="click"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="查看"
+        android:text="查看源码"
+        />
+
+    <Button
+        android:onClick="click_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="查看图片"
         />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/tv_result"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            />
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                />
+
+            <ImageView
+                android:id="@+id/iv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
     </ScrollView>
 
 </LinearLayout>

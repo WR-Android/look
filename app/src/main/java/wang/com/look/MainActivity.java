@@ -1,5 +1,7 @@
 package wang.com.look;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -7,12 +9,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
@@ -20,6 +23,9 @@ public class MainActivity extends AppCompatActivity {
     public static final int REQUESTSUCESS = 0;
     public static final int REQUESTNOYFOUND = 1;
     public static final int REQUESTEXCEPTION = 2;
+    public static final int IMAGEIN = 3;
+    private static final String TAG = "MainActivity";
+    private ImageView iv;
     private EditText et_path;
     private TextView tv_result;
 
@@ -38,6 +44,11 @@ public class MainActivity extends AppCompatActivity {
                 case REQUESTEXCEPTION:
                     Toast.makeText(getApplicationContext(),"错误地址",Toast.LENGTH_SHORT).show();
                     break;
+                case IMAGEIN:
+                    Bitmap bitmap = (Bitmap) msg.obj;
+                    iv.setImageBitmap(bitmap);
+                    Toast.makeText(getApplicationContext(), "图片显示成功", Toast.LENGTH_SHORT).show();
+                    break;
                 default:
                     break;
             }
@@ -45,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private static final String TAG = "MainActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +63,48 @@ public class MainActivity extends AppCompatActivity {
 
         et_path = (EditText) findViewById(R.id.et_path);
         tv_result = (TextView) findViewById(R.id.tv_result);
+        iv = (ImageView) findViewById(R.id.iv);
+    }
+
+    public void click_image(View v){
+        new Thread(){public void run(){
+            try {
+                //获得访问图片路径
+                String path = et_path.getText().toString().trim();
+                //创建url对象指定我们要访问的网址（路径）
+                URL url = new URL(path);
+
+                //拿到http对象 用于发送或接收数据
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+                //设置发送get请求
+                conn.setRequestMethod("GET"); //get要求大写 默认就是get请求
+
+                //设置请求的超时时间
+                conn.setConnectTimeout(5000);
+
+                //获取服务器返回的状态码
+                int code = conn.getResponseCode();
+
+                if(code==200){
+
+                    //获取图片数据 不管什么数据都是以流的形式返回
+                    InputStream in = conn.getInputStream();
+
+                    //通过位图工厂获取bitmap
+                    Bitmap bitmap = BitmapFactory.decodeStream(in);
+
+                    Message msg = Message.obtain(); //使用msg的静态方法可以减少对象的创建
+                    msg.obj = bitmap;
+                    msg.what = IMAGEIN;
+                    handler.sendMessage(msg);
+                    in.close();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }}.start();
     }
 
     public void click(View v){
