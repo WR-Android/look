@@ -3,8 +3,6 @@ package wang.com.look;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
@@ -22,47 +20,10 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final int REQUESTSUCESS = 0;
-    public static final int REQUESTNOYFOUND = 1;
-    public static final int REQUESTEXCEPTION = 2;
-    public static final int IMAGEIN = 3;
-    public static final int IMAGEIN_CACHE = 4;
-
     private static final String TAG = "MainActivity";
     private ImageView iv;
     private EditText et_path;
     private TextView tv_result;
-
-    private Handler handler = new Handler(){
-        @Override
-        //在主线程里执行
-        public void handleMessage(Message msg) {
-            switch (msg.what){
-                case REQUESTSUCESS:
-                    String content = (String) msg.obj;
-                    tv_result.setText(content);
-                    break;
-                case REQUESTNOYFOUND:
-                    Toast.makeText(getApplicationContext(), "请求资源不存在", Toast.LENGTH_SHORT).show();
-                    break;
-                case REQUESTEXCEPTION:
-                    Toast.makeText(getApplicationContext(),"错误地址",Toast.LENGTH_SHORT).show();
-                    break;
-                case IMAGEIN:
-                    Bitmap bitmap = (Bitmap) msg.obj;
-                    iv.setImageBitmap(bitmap);
-                    Toast.makeText(getApplicationContext(), "图片显示成功", Toast.LENGTH_SHORT).show();
-                    break;
-                case IMAGEIN_CACHE:
-                    iv.setImageBitmap((Bitmap) msg.obj);
-                    Toast.makeText(getApplicationContext(), "缓存图片显示成功", Toast.LENGTH_SHORT).show();
-                    break;
-                default:
-                    break;
-            }
-
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,11 +44,14 @@ public class MainActivity extends AppCompatActivity {
                 File file = new File(getCacheDir(), Base64.encodeToString(path.getBytes(),Base64.DEFAULT));
                 if(file.exists() && file.length()>0){
                     //使用缓存图片
-                    Bitmap cachebitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-                    Message msg = Message.obtain();
-                    msg.obj = cachebitmap;
-                    msg.what = IMAGEIN_CACHE;
-                    handler.sendMessage(msg);
+                    final Bitmap cachebitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            iv.setImageBitmap(cachebitmap);
+                            Toast.makeText(getApplicationContext(), "缓存图片显示成功", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                     Toast.makeText(getApplicationContext(), "显示缓存图片", Toast.LENGTH_SHORT).show();
                 }else {
                     //第一次访问网络获取数据
@@ -124,12 +88,17 @@ public class MainActivity extends AppCompatActivity {
                         in.close();
 
                         //通过位图工厂获取bitmap
-                        Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                        final Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
 
-                        Message msg = Message.obtain(); //使用msg的静态方法可以减少对象的创建
-                        msg.obj = bitmap;
-                        msg.what = IMAGEIN;
-                        handler.sendMessage(msg);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                iv.setImageBitmap(bitmap);
+                                Toast.makeText(getApplicationContext(), "缓存图片显示成功", Toast.LENGTH_SHORT).show();
+
+                            }
+                        });
+
                     }
                 }
             } catch (Exception e) {
@@ -181,28 +150,32 @@ public class MainActivity extends AppCompatActivity {
                     //由于把流转换成字符串是一个非常常见的操作 所以我们抽出一个工具类（utils）
                     InputStream in = conn.getInputStream();
                     //使用我们定义的工具类 把in转换成String
-                    String content = StreamTools.readStream(in);
+                    final String content = StreamTools.readStream(in);
 
-                    //创建一个msg对象
-                    Message msg = new Message();
-                    msg.what = REQUESTSUCESS;
-                    msg.obj = content;
-
-                    //拿着我们创建的handler（助手） 告诉系统我要更新UI
-                    handler.sendMessage(msg); //发了一条消息，消息里携带了把数据放到了msg里面handlerMessage方法就会执行
-
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            tv_result.setText(content);
+                        }
+                    });
                 }else{
-                    //请求资源不存在 Toast是一个View 也不能在子线程更新UI
-                    Message msg = new Message();
-                    msg.what = REQUESTNOYFOUND;
-                    handler.sendMessage(msg);
+                    //请求资源不存在
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), "请求资源不存在", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
 
             } catch (Exception e) {
                 e.printStackTrace();
-                Message msg = new Message();
-                msg.what = REQUESTEXCEPTION; //错误地址
-                handler.sendMessage(msg);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(),"错误地址",Toast.LENGTH_SHORT).show();
+                    }
+                });
 
             }
 
