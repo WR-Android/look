@@ -10,6 +10,7 @@
         android:id="@+id/et_path"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="https://www.baidu.com/img/bd_logo1.png"
         android:hint="请输入查看网址或图片地址"
         />
 
